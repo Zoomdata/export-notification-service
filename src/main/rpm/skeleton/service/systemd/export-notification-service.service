@@ -1,0 +1,12 @@
+[Unit]
+Description=This unit takes care of starting and stopping zoomdata export service
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=expsrv_user
+ExecStart=/usr/bin/export-notification-service
+WorkingDirectory=/opt/export-notification-service
+
+[Install]
+WantedBy=multi-user.target

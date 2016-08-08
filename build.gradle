@@ -9,10 +9,13 @@ buildscript {
     repositories {
         mavenLocal()
         mavenCentral()
+        maven { url "https://repo.spring.io/plugins-release" }
+        maven { url "https://plugins.gradle.org/m2/" }
     }
 
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath("gradle.plugin.com.netflix.nebula:gradle-ospackage-plugin:3.6.1")
     }
 
     tasks.withType(JavaCompile) {
@@ -30,9 +33,10 @@ repositories {
 
 apply plugin: 'java'
 apply plugin: 'spring-boot'
+apply plugin: 'nebula.ospackage-base'
 
 jar {
-    baseName = 'notification-service'
+    baseName = 'export-notification-service'
     version =  '0.1.0'
 }
 
@@ -52,4 +56,42 @@ dependencies {
     compile("org.springframework:spring-webmvc:${springFrameworkVersion}")
 
     compileOnly('org.projectlombok:lombok:1.16.8')
+}
+
+task buildRpm(type: Rpm, dependsOn: build) {
+
+    ext {
+        installdir = "${jar.baseName}"
+        systemuser = 'expsrv_user'
+        service_name = 'export-service'
+    }
+
+    packageName = jar.baseName
+    version = jar.version
+    arch = X86_64
+    os = LINUX
+    type = BINARY
+    provides "Zoomdata ${jar.baseName}"
+    packager 'Zoomdata'
+    prefix '= /opt'
+
+    preInstall file('src/main/rpm/scripts-hardcoded/preinstall.sh')
+    postInstall file('src/main/rpm/scripts-hardcoded/postinstall.sh')
+    preUninstall file('src/main/rpm/scripts-hardcoded/preremove.sh')
+    postUninstall file('src/main/rpm/scripts-hardcoded/postremove.sh')
+
+    from(jar.outputs.files) {
+        createDirectoryEntry = true
+        into "${installdir}/services"
+        user "${systemuser}"
+        rename { fileName ->
+            fileName.replace("-${jar.version}", '')
+        }
+    }
+
+    from('src/main/rpm/skeleton') {
+        createDirectoryEntry = true
+        into "${installdir}"
+        user "${systemuser}"
+    }
 }

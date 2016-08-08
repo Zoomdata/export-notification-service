@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# check user
+if [ ${EUID} == 0 ]; then
+    echo "Export service should not be run under ROOT privileges."
+    exit 1
+fi
+
+ENV_CONFIG=/opt/export-notification-service/conf/export-notification-service.env
+if [ -f "${ENV_CONFIG}" ] ; then
+   . "${ENV_CONFIG}"
+fi
+JAVA_OPTS=${JAVA_OPTS:-"-Xms256m -Xmx512m -XX:+UseConcMarkSweepGC"}
+
+BIN_DIR=$( dirname "${BASH_SOURCE[0]}" )
+INSTALL_DIR=$( dirname "${BIN_DIR}" )
+CONFIG_PROPERTIES_FILES="/opt/export-notification-service/conf/export-notification-service.properties"
+
+if [[ -x "${INSTALL_DIR}/jre/bin/java" ]] ; then
+  JAVA_HOME="${INSTALL_DIR}/jre"
+  EXEC_JAVA="${JAVA_HOME}/bin/java"
+elif [[ "x${JAVA_HOME}" != "x" ]] && [[ -x "${JAVA_HOME}/bin/java" ]] ; then
+  EXEC_JAVA="${JAVA_HOME}/bin/java"
+else
+  EXEC_JAVA="java"
+fi
+
+echo "Starting export-notification-service with ${EXEC_JAVA}"
+
+EXEC_JAVA="${EXEC_JAVA} -Duser.timezone=GMT"
+EXEC_JAVA="${EXEC_JAVA} -Dinstall.dir=/opt/export-notification-service"
+EXEC_JAVA="${EXEC_JAVA} -Dspring.config.location=${CONFIG_PROPERTIES_FILES}"
+
+exec /bin/bash -c "${EXEC_JAVA} ${JAVA_OPTS} -jar /opt/export-notification-service/services/export-notification-service.jar"
+
