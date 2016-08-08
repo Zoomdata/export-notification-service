@@ -1,3 +1,7 @@
 spring:
   application:
-    name: notification-service
+    name: export-notification-service
+
+logging:
+  file: logs/export-notification-service.log
+  level: info
