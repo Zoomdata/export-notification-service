@@ -61,9 +61,9 @@ dependencies {
 task buildRpm(type: Rpm, dependsOn: build) {
 
     ext {
-        installdir = "${jar.baseName}"
+        installdir = "/opt/${jar.baseName}"
         systemuser = 'expsrv_user'
-        service_name = 'export-service'
+        service_name = "${jar.baseName}"
     }
 
     packageName = jar.baseName
