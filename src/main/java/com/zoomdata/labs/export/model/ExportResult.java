@@ -11,6 +11,7 @@ import java.util.Map;
 public class ExportResult {
 
     private String requestId;
+    private String request;
     private ExportDestination destination;
     private Collection<WriteResult> writeResults;
     private ExportStatus status;
